@@ -15,17 +15,24 @@ extern "C" {
 }
 
 int main(){
-	// Specify simulation parameters
-    for(int power = 1; power < 12;power++){
-    	double theta_i = 20.0;
-    	double theta_v = -20.0;
-    	double sigma = pow(2,power);
-    	double deltaX = 2e-4;
+
+	    // Specify simulation parameters
+        double theta_i = 20.0;
+        double theta_v = -20.0;
+        double sigma = 100;
+        //Store analytical result
+        double true_value = 0;
+        true_value = -0.446*sqrt(sigma);
+        double deltaTheta = 0.02;
+        //Calculate other parameters
+        double deltaT = deltaTheta / sigma;
+        double maxT = 2 * fabs(theta_v - theta_i) / sigma;
+        double maxX = 6*sqrt(maxT);
+
+    for(int power = 0;power<17;power++){
+    	double deltaX = 2e-5*pow(2,power);
     	double deltaTheta = 0.02;
     	//Calculate other parameters
-    	double deltaT = deltaTheta / sigma;
-    	double maxT = 2 * fabs(theta_v - theta_i) / sigma;
-    	double maxX = 6*sqrt(maxT);
     	int n_space = (int)( maxX / deltaX ); // number of spacesteps
     	int m_time = (int)( maxT / deltaT ); // number of timesteps
     	// Calculate coefficients for banded solver
@@ -33,6 +40,8 @@ int main(){
     	double alpha = -lambda;
     	double beta = 2.0*lambda + 1.0;
     	double gamma = -lambda;
+        // Save voltage and current in an array
+        double* data_array = new double[2*m_time];
 
     	//Use banded solver to solve the concentration profile
 
@@ -101,7 +110,6 @@ int main(){
     //////////////////////////////////////////////////////////////////
         //Perform simulation and count elapsed time
         double t0 = omp_get_wtime();
-        printf("#sigma is=%g \n \n \n",sigma);
         for (int i=0 ; i<m_time;i++){
     	    // Print the matrix
     	    /*
@@ -139,22 +147,35 @@ int main(){
     	        for (int j=1; j<n; j++) printf("  [%2.g]\n", b[j].real());
     	    }*/
     		double flux = -(-b[2].real()+4*b[1].real()-3*b[0].real())/(2*deltaX);
-
-            //print resutls-> save for gnuplot
-    		printf("%g %g\n", Theta, flux);
-    		//for(int i =0;i<n;i++) printf("%g \n",b[i].real());
+            data_array[i] = Theta;
+            data_array[m_time+i]= flux;
+    
     	    //Boundary condition
 
     		//reset ab (because zgbsv changes the composition of ab)
         	memcpy(ab,ab_temp,ldab*n*sizeof(dcomplex));
 
     	}
+        //Calculate error
+        //store the numerical peak flux
+        double peak_flux = 0;
+        for(int j = 0;j<m_time;j++){
+            peak_flux = data_array[m_time+j]<peak_flux?data_array[m_time+j]:peak_flux;
+        }
+
+        double error = (peak_flux-true_value)/true_value;
+
+
     	double t1 = omp_get_wtime();
-    	//printf("Time elapsed is %g\n",t1-t0);
+        double time_elapsed = t1-t0;
+        //output dX, error and consumed time
+        printf("%g %g %g\n",deltaX,error,time_elapsed);
+
         delete [] ab;
         delete [] ab_temp;
         delete [] b;
         delete [] ipiv;
+        delete [] data_array;
 
     }
 }
