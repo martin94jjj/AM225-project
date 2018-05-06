@@ -20,19 +20,21 @@ int main(){
         double theta_i = 20.0;
         double theta_v = -20.0;
         double sigma = 100;
-        //Store analytical result
-        double true_value = 0;
-        true_value = -0.446*sqrt(sigma);
+        // Store analytical result
+        double true_value = -0.446*sqrt(sigma);
+        
         double deltaTheta = 0.02;
-        //Calculate other parameters
+        // Calculate other parameters
         double deltaT = deltaTheta / sigma;
         double maxT = 2 * fabs(theta_v - theta_i) / sigma;
         double maxX = 6*sqrt(maxT);
-
+    #pragma omp parallel for
     for(int power = 0;power<17;power++){
+
+        // DeltaX is a function of power
     	double deltaX = 2e-5*pow(2,power);
     	double deltaTheta = 0.02;
-    	//Calculate other parameters
+    	// Calculate other parameters
     	int n_space = (int)( maxX / deltaX ); // number of spacesteps
     	int m_time = (int)( maxT / deltaT ); // number of timesteps
     	// Calculate coefficients for banded solver
@@ -43,7 +45,9 @@ int main(){
         // Save voltage and current in an array
         double* data_array = new double[2*m_time];
 
-    	//Use banded solver to solve the concentration profile
+//////////////////////////////////////////////////////////////////////////////////////////
+
+    	// Use banded solver to solve the concentration profile
 
         // Size of the matrix
         const int n = n_space;
@@ -107,26 +111,10 @@ int main(){
         //Boundary condition
         b[0] = dcomplex(1.0 / (1.0 + exp(-Theta)),0);
     	b[n-1] = dcomplex(1.0,0);
-    //////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
         //Perform simulation and count elapsed time
         double t0 = omp_get_wtime();
         for (int i=0 ; i<m_time;i++){
-    	    // Print the matrix
-    	    /*
-    	    for (int j=0; j<n; j++) {
-    	        printf(j==0?"A=[":"  [");
-    	        for (int i=0; i<n; i++) {
-    	            int k=i-j;
-    	            dcomplex x = k<-kl||k>ku?0:ab[kl+ku+i*ldab-k];
-    	            printf("%2.g ", x.real());
-    	        }
-    	        puts("]");
-    	    }
-
-    	    // Print the source term
-    	    printf("\nb=[%2.g ]\n", b->real());
-    	    for (int j=1; j<n; j++) printf("  [%2.g ]\n", b[j].real());
-    	    */
 
     		if(i<m_time/2) Theta -= deltaTheta; 
     		else Theta += deltaTheta; 
@@ -135,23 +123,11 @@ int main(){
 
     	    // Call LAPACK
     	    zgbsv_(&n, &kl, &ku, &nrhs, ab, &ldab, ipiv, b, &n, &info);
-    		/*
-    	    // Process errors
-    	    if (info < 0) {
-    	        printf("\nInvalid argument at position %d\n", -info);
-    	    } else if (info > 0) {
-    	        printf("\nMatrix is singular at position %d\n", info);
-    	    } else {
-    	        // Print the solution
-    	        printf("\nx=[%2.g]\n", b->real());
-    	        for (int j=1; j<n; j++) printf("  [%2.g]\n", b[j].real());
-    	    }*/
+
     		double flux = -(-b[2].real()+4*b[1].real()-3*b[0].real())/(2*deltaX);
             data_array[i] = Theta;
             data_array[m_time+i]= flux;
     
-    	    //Boundary condition
-
     		//reset ab (because zgbsv changes the composition of ab)
         	memcpy(ab,ab_temp,ldab*n*sizeof(dcomplex));
 
@@ -159,6 +135,7 @@ int main(){
         //Calculate error
         //store the numerical peak flux
         double peak_flux = 0;
+
         for(int j = 0;j<m_time;j++){
             peak_flux = data_array[m_time+j]<peak_flux?data_array[m_time+j]:peak_flux;
         }
@@ -169,7 +146,7 @@ int main(){
     	double t1 = omp_get_wtime();
         double time_elapsed = t1-t0;
         //output dX, error and consumed time
-        printf("%g %g %g\n",deltaX,error,time_elapsed);
+        printf("%g %g %g\n",deltaX,fabs(error),time_elapsed);
 
         delete [] ab;
         delete [] ab_temp;

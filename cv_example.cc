@@ -93,7 +93,7 @@ int main()
 		delete [] data_array;
 		double t1 = omp_get_wtime();
 		double time_elapsed = t1-t0;
-        printf("%g %g %g\n",deltaX,error,time_elapsed);
+        printf("%g %g %g\n",deltaX,fabs(error),time_elapsed);
 
 	}
 
