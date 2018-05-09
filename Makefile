@@ -6,9 +6,8 @@ execs=cv cv_dx_conv cv_example cv_example_bck cv_example_cn
 execs=cv_example_bck_conv cv_example_cn_conv cv_example_bck_changing_x 
 execs=cv_example_bck_changing_x_conv
 execs=butler_volmer butler_volmer_changing_alpha cv_example_bck_changing_x_peak_separation
-
-execs=butler_volmer_simulate_NQ butler_volmer_find_peak_potential
-
+execs=butler_volmer_simulate_NQ butler_volmer_find_peak_potential butler_volmer_find_peak_potential_changing_scan
+execs=butler_volmer_changing_sigma
 all: $(execs)
 
 
@@ -54,6 +53,11 @@ butler_volmer_simulate_NQ: butler_volmer_simulate_NQ.cc
 butler_volmer_find_peak_potential: butler_volmer_find_peak_potential.cc
 	$(cxx) $(cflags) $(iflags) -o $@ $^ $(lp_lflags)
 
+butler_volmer_find_peak_potential_changing_scan: butler_volmer_find_peak_potential_changing_scan.cc
+	$(cxx) $(cflags) $(iflags) -o $@ $^ $(lp_lflags)
+
+butler_volmer_changing_sigma: butler_volmer_changing_sigma.cc
+	$(cxx) $(cflags) $(iflags) -o $@ $^ $(lp_lflags)
 clean:
 	rm -f $(execs) $(objs) libf2d.a
 
