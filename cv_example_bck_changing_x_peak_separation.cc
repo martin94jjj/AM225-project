@@ -11,14 +11,16 @@ int main() {
 	//double deltaX = 2e-5;
 	double deltaTheta = 0.02;
 
-
-
 	// Calculate other parameters
 	double deltaT = deltaTheta / sigma;
 	double maxT = 2 * fabs(theta_v - theta_i) / sigma;
 	double maxX = 6 * sqrt(maxT);
 	int m = (int)( maxT / deltaT ); // number of timesteps
 	//printf("maxX=%g, deltaX=%g, n=%d, (n-1)*deltaX=%g\n", maxX, deltaX, n, (n-1)*deltaX);
+
+	// Arrays storing peak values
+	double* theta_array = new double[m];
+	double* flux_array = new double[m];
 
 	//unequally spaced grid
 	double omega = 1.001;
@@ -83,6 +85,26 @@ int main() {
 		// Output current
 		double flux = -(-C[2] + 4*C[1] -3*C[0]) / (2*(X[1]-X[0]));
 		CV << Theta << "\t" << flux << "\n";
+		theta_array[k] = Theta;
+		flux_array[k] = flux;
 	}
+		double peak_pos = 0;
+		double peak_neg = 0;
+		double theta_pos = 0;
+		double theta_neg = 0;
+		double peak_separation = 0;
+		for(int i = 0; i < m; i++){
+			if(flux_array[i]>peak_pos){
+				peak_pos = flux_array[i];
+				theta_pos = theta_array[i];
+			}
+			if(flux_array[i]<peak_neg){
+				peak_neg = flux_array[i];
+				theta_neg = theta_array[i];
+			}
+		}
+
+		peak_separation = theta_pos-theta_neg;
+		printf("perfecly reversible peak separation %g\n",peak_separation);
 // END SIMULATION
 }
