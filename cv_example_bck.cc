@@ -8,7 +8,7 @@ int main() {
 	double theta_i = 20.0;
 	double theta_v = -20.0;
 	double sigma = 100.0;
-	double deltaX = 2e-5;
+	double deltaX = 2e-2;
 	double deltaTheta = 0.02;
 
 	// Calculate other parameters
@@ -17,7 +17,8 @@ int main() {
 	double maxX = 6 * sqrt(maxT);
 	int n = (int)( maxX / deltaX ); // number of spacesteps
 	int m = (int)( maxT / deltaT ); // number of timesteps
-	printf("maxX=%g, deltaX=%g, n=%d, (n-1)*deltaX=%g\n", maxX, deltaX, n, (n-1)*deltaX);
+	// printf("maxX=%g, deltaX=%g, n=%d, (n-1)*deltaX=%g\n", maxX, deltaX, n, (n-1)*deltaX);
+	// printf("maxT=%g, deltaT=%g, m=%d, (m-1)*deltaT=%g\n", maxT, deltaT, m, (m-1)*deltaT);
 
 	// Calculate Thomas coefficients
 	double lambda = deltaT / (deltaX*deltaX);
@@ -25,7 +26,7 @@ int main() {
 	double beta = 2.0*lambda + 1.0;
 	double gamma = -lambda;
 
-	printf("lambda=%g\n", lambda);
+	// printf("lambda=%g\n", lambda);
 
 	// Create containers
 	std::vector<double> g_mod(n-1, 0);
@@ -63,7 +64,16 @@ int main() {
 		
 		// Output current
 		double flux = -(-C[2] + 4*C[1] -3*C[0]) / (2*deltaX);
-		CV << Theta << "\t" << flux << "\n";
+		CV << Theta << "\t" << flux << "\t" << C[0] << "\n";
+
+		// Output concentration profile at maxT/4, maxT/2, maxT*3/4, maxT
+		// if ((k==m/4)|(k==m/2)|(k==m*3/4)|(k==m-1)) {
+		// 	for(int i=0; i<n; i++) {
+		// 		printf("%g %g\n", i*deltaX, C[i]);
+		// 	}
+		// 	printf("\n\n");
+		// }
+		
 	}
 // END SIMULATION
 }
