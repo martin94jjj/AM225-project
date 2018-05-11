@@ -1,7 +1,6 @@
 #include "butler_volmer.hh"
 
 #include <cstdio>
-// #include <cstdlib>
 #include <cstring>
 #include <vector> // Header for vectors
 #include <cmath> // Header for sqrt(), fabs()
